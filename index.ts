@@ -57,11 +57,16 @@ export default function (pi: ExtensionAPI) {
 				}),
 			),
 		}),
-		async execute(args) {
-			const prompt = args.prompt?.trim() || "@HANDOVER.md";
+		async execute(_toolCallId, args) {
+			const prompt = (args as { prompt?: string })?.prompt?.trim() || "@HANDOVER.md";
 			// Tools cannot call ctx.newSession() directly; queue the command as a
 			// follow-up — it fires when the current turn has no more tool calls.
-			pi.sendUserMessage(`/handoff ${prompt}`, { deliverAs: "followUp" });
+			// expandPromptTemplates is REQUIRED: without it "/handoff ..." is
+			// delivered as literal text instead of dispatching the command.
+			pi.sendUserMessage(`/handoff ${prompt}`, {
+				deliverAs: "followUp",
+				expandPromptTemplates: true,
+			});
 			return {
 				content: [
 					{
