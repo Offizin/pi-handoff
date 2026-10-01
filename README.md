@@ -14,11 +14,14 @@ ln -s /path/to/pi-handoff ~/.pi/agent/extensions/pi-handoff
 
 - User: `/handoff @HANDOVER.md` (or bare `/handoff`)
 - Agent: write durable handover state first, then call the `handoff` tool;
-  `/handoff <prompt>` is queued as a follow-up and runs when the turn settles.
+  `/handoff <prompt>` is dispatched immediately, and the command handler waits
+  for the turn to settle before replacing the session.
 
 Mechanics: `ctx.waitForIdle()` → `ctx.newSession({parentSession, withSession})`
 → `sendUserMessage(kickoff)` in the replacement session. Old session file stays
-on disk, linked via parent header.
+on disk, linked via parent header. Handoffs are single-flight: a second tool
+call or `/handoff` while one is queued/running is refused, because pi's
+`newSession()` is not reentrant.
 
 ## pi API gotchas baked into this extension (do not "simplify" them away)
 
@@ -29,3 +32,14 @@ on disk, linked via parent header.
    params are the **second** argument.
 3. Don't load this extension twice (e.g. `-e` flag *and* global symlink):
    `handoff` would register twice.
+4. Handoffs are single-flight (module-level `handoffState`). pi's
+   `AgentSessionRuntime.newSession()` is not reentrant — two concurrent
+   replacements both run `withSession` against the same session, and the second
+   `sendUserMessage` throws "Agent is already processing", which the
+   interactive host turns into a fatal exit.
+
+## Development
+
+```sh
+npm test    # single-flight regression tests (node --test; typebox is stubbed, no install)
+```

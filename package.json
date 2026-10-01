@@ -1,0 +1,9 @@
+{
+	"name": "pi-handoff",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"test": "node --import ./test/resolve-hook.mjs --test test/*.test.mjs"
+	}
+}
