@@ -47,7 +47,15 @@ export default function (pi: ExtensionAPI) {
 					parentSession: parent,
 					withSession: async (replacementCtx) => {
 						// Only use replacementCtx here — captured old ctx/pi are stale.
-						await replacementCtx.sendUserMessage(kickoff);
+						// Do NOT await sendUserMessage(): it resolves only when the replacement
+						// session's first run finishes (one autonomous run can last hours), and
+						// awaiting it would hold the single-flight guard for that whole run,
+						// refusing every later handoff (observed 2026-10-06, 2h23m). The
+						// replacement is complete once this callback returns; report kickoff
+						// failures instead of swallowing them.
+						replacementCtx.sendUserMessage(kickoff).catch((err) => {
+							replacementCtx.ui.notify(`Handoff kickoff failed: ${err}`, "error");
+						});
 					},
 				});
 

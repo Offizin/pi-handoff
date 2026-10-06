@@ -108,6 +108,69 @@ test("a failed replacement clears the guard instead of wedging the session", asy
 	assert.deepEqual(second.kickoffs, ["/two"]);
 });
 
+test("kickoff run does not hold the guard: handoff works during the new session's first run", async () => {
+	const { command, tool, sends } = await load();
+
+	let releaseKickoff;
+	const kickoffRun = new Promise((resolve) => (releaseKickoff = resolve));
+	const ctx = {
+		ui: { notify: () => {} },
+		waitForIdle: () => Promise.resolve(),
+		sessionManager: { getSessionFile: () => "/tmp/parent.jsonl" },
+		newSession: async (options) => {
+			await options.withSession({
+				ui: { notify: () => {} },
+				// Resolves only when the replacement session's first run finishes.
+				sendUserMessage: (text) => {
+					assert.equal(text, "@HANDOVER.md");
+					return kickoffRun;
+				},
+			});
+			return { cancelled: false };
+		},
+	};
+
+	const handler = command.handler("@HANDOVER.md", ctx);
+	try {
+		// Let the handler finish the replacement while the kickoff run is pending.
+		await new Promise((resolve) => setTimeout(resolve, 20));
+
+		// Regression (2026-10-06): awaiting the kickoff run kept the guard
+		// "running", so this call was refused for the whole first run.
+		const res = await tool.execute("id-next", { prompt: "@NEXT.md" });
+		assert.ok(res.content[0].text.includes("Handoff queued"), "handoff during the kickoff run must be accepted");
+		assert.equal(sends.length, 1);
+		assert.equal(sends[0].content, "/handoff @NEXT.md");
+	} finally {
+		releaseKickoff();
+		await handler;
+	}
+});
+
+test("a failing kickoff is reported, not swallowed", async () => {
+	const { command } = await load();
+	const notify = [];
+	const ctx = {
+		ui: { notify: (message, level) => notify.push({ message, level }) },
+		waitForIdle: () => Promise.resolve(),
+		sessionManager: { getSessionFile: () => "/tmp/parent.jsonl" },
+		newSession: async (options) => {
+			await options.withSession({
+				ui: { notify: (message, level) => notify.push({ message, level }) },
+				sendUserMessage: () => Promise.reject(new Error("kickoff exploded")),
+			});
+			return { cancelled: false };
+		},
+	};
+
+	await command.handler("@HANDOVER.md", ctx);
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	assert.ok(
+		notify.some((n) => n.level === "error" && n.message.includes("kickoff exploded")),
+		"kickoff failure must surface as an error notification",
+	);
+});
+
 test("normal path forwards the kickoff into the replacement session", async () => {
 	const { command } = await load();
 	const { ctx, kickoffs, calls, notify } = makeCtx();
