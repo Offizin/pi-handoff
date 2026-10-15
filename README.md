@@ -27,7 +27,7 @@ a second tool call or `/handoff` while one is queued/running is refused, because
 pi's `newSession()` is not reentrant. The guard is released as soon as the
 session replacement completes — never held for the kickoff run.
 
-## pi API gotchas baked into this extension (do not "simplify" them away)
+## pi API gotchas baked into this extension
 
 1. `pi.sendUserMessage()` needs `expandPromptTemplates: true` — without it,
    `/handoff ...` is delivered as literal chat text instead of dispatching
