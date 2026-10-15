@@ -45,8 +45,7 @@ session replacement completes — never held for the kickoff run.
    `withSession`. It resolves only when the replacement session's first run
    finishes — one autonomous run can last hours — and the guard is module state
    shared across the replacement (pi caches the extension factory per cwd), so
-   awaiting it refuses every handoff in the new session until that run ends
-   (observed 2026-10-06: refused 2h23m into the session the handoff had spawned).
+   awaiting it refuses every handoff in the new session until that run ends.
    Send the kickoff and attach a `.catch` that reports via `replacementCtx.ui`.
 
 ## Development
