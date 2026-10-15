@@ -55,3 +55,7 @@ session replacement completes — never held for the kickoff run.
 ```sh
 npm test    # single-flight regression tests (node --test; typebox is stubbed, no install)
 ```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
