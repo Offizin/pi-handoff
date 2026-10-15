@@ -15,10 +15,10 @@ git clone https://github.com/Offizin/pi-handoff.git ~/.pi/agent/extensions/pi-ha
 
 ## Usage
 
-- User: `/handoff @HANDOVER.md` (or bare `/handoff`)
-- Agent: write durable handover state first, then call the `handoff` tool;
-  `/handoff <prompt>` is dispatched immediately, and the command handler waits
-  for the turn to settle before replacing the session.
+optionally write durable handover state first, then call the `handoff` tool;
+`/handoff <optional prompt, file or freetext>` is dispatched immediately, 
+and the command handler waits for the turn to settle before replacing the session.
+Make sure there is no space in front of `/`.
 
 Mechanics: `ctx.waitForIdle()` → `ctx.newSession({parentSession, withSession})`
 → `sendUserMessage(kickoff)` in the replacement session, **not awaited**. Old
