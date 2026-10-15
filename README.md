@@ -6,8 +6,11 @@ kickoff prompt is whatever the caller passes, typically `@HANDOVER.md`.
 
 ## Install (global)
 
+pi loads every extension found in `~/.pi/agent/extensions/`. Clone this repo
+there (or symlink a local checkout to the same place):
+
 ```bash
-ln -s /path/to/pi-handoff ~/.pi/agent/extensions/pi-handoff
+git clone https://github.com/Offizin/pi-handoff.git ~/.pi/agent/extensions/pi-handoff
 ```
 
 ## Usage
