@@ -20,7 +20,7 @@ Optionally write durable handover state first, then call the `handoff` tool:
 and the command handler waits for the turn to settle before replacing the session.
 Make sure there is no space in front of `/`.
 
-`/handoff` allows the agent to replace itself with a fresh session.
+`/handoff` enables the agent to replace itself with a fresh session.
 
 Mechanics: `ctx.waitForIdle()` → `ctx.newSession({parentSession, withSession})`
 → `sendUserMessage(kickoff)` in the replacement session, **not awaited**. Old
